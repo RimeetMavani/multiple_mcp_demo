@@ -1,0 +1,33 @@
+# Emojis & Python/Uvicorn cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Configuration and OAuth Tokens (SENSITIVE)
+**/credentials.json
+**/token.json
+**/credentials*.json
+credentials.json
+token.json
+
+# Local database and run logs (PERSONAL DATA)
+shared/mock_db.json
+logs/run_*.json
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.bak
+
+# Node/JS dependencies
+node_modules/
+**/node_modules/

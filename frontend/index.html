@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-MCP Agent Dashboard</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Custom Styling -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Sidebar: Past Run History & Status -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <i class="fa-solid fa-network-wired logo-icon"></i>
+          <h2>Multi-MCP</h2>
+        </div>
+        <p class="tagline">Agent Orchestrator</p>
+      </div>
+
+      <!-- Server Status Indicators -->
+      <div class="status-panel card">
+        <h3>System Status</h3>
+        <div class="status-item">
+          <div class="status-label">
+            <i class="fa-solid fa-calendar-days text-calendar"></i>
+            <span>Calendar MCP</span>
+          </div>
+          <span id="calendar-status" class="badge badge-offline">Offline</span>
+        </div>
+        <div class="status-item">
+          <div class="status-label">
+            <i class="fa-solid fa-list-check text-task"></i>
+            <span>Task MCP</span>
+          </div>
+          <span id="task-status" class="badge badge-offline">Offline</span>
+        </div>
+        <div class="status-item">
+          <div class="status-label">
+            <i class="fa-solid fa-brain text-llm"></i>
+            <span>LLM Provider</span>
+          </div>
+          <span id="llm-status" class="badge badge-loading">Checking</span>
+        </div>
+        <button id="reconnect-btn" class="btn btn-secondary btn-small">
+          <i class="fa-solid fa-rotate"></i> Reconnect Servers
+        </button>
+      </div>
+
+      <!-- History Section -->
+      <div class="history-panel">
+        <h3>Execution History</h3>
+        <div id="history-list" class="history-list">
+          <!-- Populated by JS -->
+          <div class="history-empty">No runs recorded yet</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- Top Bar: Settings and Info -->
+      <header class="top-bar">
+        <div class="top-bar-title">
+          <h1>Agent Dashboard</h1>
+        </div>
+        
+        <!-- Quick Settings Modal Trigger -->
+        <button id="settings-toggle-btn" class="btn btn-icon" title="LLM Configuration">
+          <i class="fa-solid fa-gears"></i>
+        </button>
+      </header>
+
+      <!-- Settings Panel (Hidden by default, overlays top bar or slides out) -->
+      <div id="settings-panel" class="settings-panel card hidden">
+        <div class="settings-header">
+          <h3><i class="fa-solid fa-sliders"></i> LLM Configuration</h3>
+          <button id="settings-close-btn" class="btn-close">&times;</button>
+        </div>
+        <div class="settings-body">
+          <div class="form-group">
+            <label for="provider-select">LLM Provider</label>
+            <select id="provider-select">
+              <option value="ollama">Ollama (Local)</option>
+              <option value="groq">Groq (Cloud API)</option>
+            </select>
+          </div>
+          <div class="form-group" id="ollama-settings-group">
+            <label for="ollama-model-input">Ollama Model</label>
+            <input type="text" id="ollama-model-input" value="llama3.2">
+            <small>Requires Ollama to be running locally with this model pulled.</small>
+          </div>
+          <div class="form-group hidden" id="groq-settings-group">
+            <label for="groq-model-select">Groq Model</label>
+            <select id="groq-model-select">
+              <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
+              <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
+              <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+            </select>
+            <label for="groq-api-key-input" class="margin-top-s">Groq API Key</label>
+            <input type="password" id="groq-api-key-input" placeholder="gsk_...">
+            <small>Or set <code>GROQ_API_KEY</code> environment variable on orchestrator startup.</small>
+          </div>
+          <button id="save-config-btn" class="btn btn-primary btn-full">Save Configuration</button>
+        </div>
+      </div>
+
+      <!-- Execution Panel: Prompts & Results -->
+      <div class="content-scroller">
+        
+        <!-- Prompt Box -->
+        <section class="prompt-section card">
+          <div class="form-row">
+            <div class="input-wrapper">
+              <input type="text" id="prompt-input" placeholder="E.g., Schedule a project meeting tomorrow at 10 AM and automatically create a preparation task..." autocomplete="off">
+              <button id="submit-prompt-btn" class="btn btn-primary">
+                <span id="btn-text">Submit Prompt</span>
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Sample Suggestion Chips -->
+          <div class="sample-chips">
+            <span class="chip-label">Try prompts:</span>
+            <button class="chip">Schedule a meeting tomorrow at 2 PM</button>
+            <button class="chip">Schedule a meeting and automatically create a preparation task</button>
+            <button class="chip">Move my meeting to Friday and update the related task deadline</button>
+            <button class="chip">Show today's meetings</button>
+            <button class="chip">List all pending tasks</button>
+            <button class="chip">Delete tomorrow's meeting and its associated task</button>
+          </div>
+        </section>
+
+        <!-- Loading Spinner overlay / status -->
+        <div id="loader" class="loader-container hidden">
+          <div class="spinner"></div>
+          <p id="loader-status">Agent is reasoning and orchestrating MCP servers...</p>
+          <div class="loader-details">
+            <span id="loader-elapsed">Elapsed: 0.0s</span>
+          </div>
+        </div>
+
+        <!-- Workflow Output Grid -->
+        <div id="results-container" class="results-container hidden">
+          
+          <!-- Summary Row: Workflow stats -->
+          <div class="workflow-summary-banner">
+            <div class="stat-badge">
+              <span class="stat-label">Total Duration</span>
+              <span id="workflow-duration" class="stat-val">0 ms</span>
+            </div>
+            <div class="stat-badge">
+              <span class="stat-label">Model Used</span>
+              <span id="workflow-model" class="stat-val">llama3.2</span>
+            </div>
+            <div class="stat-badge">
+              <span class="stat-label">Tool Calls</span>
+              <span id="workflow-tool-count" class="stat-val">0</span>
+            </div>
+          </div>
+
+          <!-- Section: AI Text Response -->
+          <section class="ai-response-section card">
+            <div class="section-header">
+              <h3><i class="fa-solid fa-robot text-llm"></i> AI Agent Response</h3>
+            </div>
+            <div id="ai-response-text" class="markdown-body">
+              <!-- Rendered markdown response -->
+            </div>
+          </section>
+
+          <!-- Section: Execution Timeline -->
+          <section class="timeline-section card">
+            <div class="section-header">
+              <h3><i class="fa-solid fa-timeline"></i> Execution Timeline</h3>
+            </div>
+            <div id="execution-timeline" class="timeline">
+              <!-- Rendered execution timeline steps -->
+            </div>
+          </section>
+
+          <!-- Section: Tool Execution Details (Viewer) -->
+          <section class="tool-viewer-section card">
+            <div class="section-header">
+              <h3><i class="fa-solid fa-laptop-code"></i> Tool Execution Details</h3>
+            </div>
+            <div id="tool-executions-list" class="tool-executions-list">
+              <!-- Rendered tool invocation list -->
+            </div>
+          </section>
+
+          <!-- Section: Raw Responses (JSON & HTML Views) -->
+          <section class="raw-responses-section card">
+            <div class="section-header">
+              <h3><i class="fa-solid fa-bug"></i> Server Output Inspector</h3>
+              <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="rendered-html">HTML Output</button>
+                <button class="tab-btn" data-tab="raw-json">Raw JSON</button>
+              </div>
+            </div>
+            
+            <div class="tab-contents">
+              <!-- Tab: Rendered HTML Responses -->
+              <div id="tab-rendered-html" class="tab-content active">
+                <div class="server-outputs-grid">
+                  <div class="server-output-col">
+                    <h4><i class="fa-solid fa-calendar-days text-calendar"></i> Calendar Server HTML</h4>
+                    <div id="calendar-html-output" class="rendered-html-viewer">
+                      <div class="empty-state">No Calendar tools invoked during this run.</div>
+                    </div>
+                  </div>
+                  <div class="server-output-col">
+                    <h4><i class="fa-solid fa-list-check text-task"></i> Task Server HTML</h4>
+                    <div id="task-html-output" class="rendered-html-viewer">
+                      <div class="empty-state">No Task tools invoked during this run.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab: Raw JSON Responses -->
+              <div id="tab-raw-json" class="tab-content">
+                <div class="server-outputs-grid">
+                  <div class="server-output-col">
+                    <h4>Calendar MCP Output</h4>
+                    <pre><code id="calendar-json-output" class="json-code">{}</code></pre>
+                  </div>
+                  <div class="server-output-col">
+                    <h4>Task MCP Output</h4>
+                    <pre><code id="task-json-output" class="json-code">{}</code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </main>
+
+  </div>
+  
+  <script src="app.js"></script>
+</body>
+</html>

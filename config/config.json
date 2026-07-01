@@ -1,0 +1,22 @@
+{
+  "llmProvider": "ollama",
+  "ollama": {
+    "host": "http://127.0.0.1:11434",
+    "model": "llama3.2"
+  },
+  "groq": {
+    "host": "https://api.groq.com/openai/v1",
+    "model": "llama-3.3-70b-versatile",
+    "apiKey": ""
+  },
+  "servers": {
+    "calendar": {
+      "port": 3001,
+      "url": "http://localhost:3001"
+    },
+    "task": {
+      "port": 3002,
+      "url": "http://localhost:3002"
+    }
+  }
+}

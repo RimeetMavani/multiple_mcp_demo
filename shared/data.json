@@ -1,0 +1,51 @@
+{
+  "events": [
+    {
+      "id": "evt_h9i0dirjk",
+      "createdAt": "2026-07-01T03:13:07.652Z",
+      "title": "Project Meeting",
+      "startTime": "2026-07-02T04:30:00.000Z",
+      "endTime": "2026-07-01T03:13:07.651Z",
+      "description": "",
+      "reminderMinutes": "0"
+    },
+    {
+      "id": "evt_aurv6ag9a",
+      "createdAt": "2026-07-01T03:14:14.574Z",
+      "title": "Project Meeting Tomorrow",
+      "startTime": "2026-07-02T04:30:00.000Z",
+      "endTime": "2026-07-01T03:14:14.574Z",
+      "description": "",
+      "reminderMinutes": "0"
+    },
+    {
+      "id": "evt_i68b8arkl",
+      "createdAt": "2026-07-01T03:18:24.514Z",
+      "title": "Meeting",
+      "startTime": "2026-07-02T08:30:00.000Z",
+      "endTime": "2026-07-01T03:18:24.513Z",
+      "description": "",
+      "reminderMinutes": "0"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_b9s90e0qn",
+      "status": "pending",
+      "createdAt": "2026-07-01T03:14:14.668Z",
+      "title": "Prepare for: Project Meeting Tomorrow",
+      "dueDate": "2026-07-02",
+      "description": "Automated preparation task for event \"Project Meeting Tomorrow\" scheduled at Thu, 2 Jul, 2026, 10:00 am.",
+      "relatedEventId": "evt_aurv6ag9a"
+    },
+    {
+      "id": "task_4xpak1k5x",
+      "status": "pending",
+      "createdAt": "2026-07-01T03:18:24.549Z",
+      "title": "Prepare for: Meeting",
+      "dueDate": "2026-07-02",
+      "description": "Automated preparation task for event \"Meeting\" scheduled at Thu, 2 Jul, 2026, 2:00 pm.",
+      "relatedEventId": "evt_i68b8arkl"
+    }
+  ]
+}
