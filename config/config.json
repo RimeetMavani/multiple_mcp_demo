@@ -1,5 +1,5 @@
 {
-  "llmProvider": "ollama",
+  "llmProvider": "groq",
   "ollama": {
     "host": "http://127.0.0.1:11434",
     "model": "llama3.2"

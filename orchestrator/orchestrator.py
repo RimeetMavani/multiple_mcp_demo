@@ -12,10 +12,18 @@ from mcp.client.session import ClientSession
 
 # Setup directories
 current_dir = os.path.dirname(__file__)
-workspace_root = os.path.join(current_dir, '..')
+workspace_root = os.path.abspath(os.path.join(current_dir, '..'))
 frontend_dir = os.path.join(workspace_root, 'frontend')
 logs_dir = os.path.join(workspace_root, 'logs')
 config_path = os.path.join(workspace_root, 'config', 'config.json')
+
+import os
+os.environ["PORT"] = os.getenv("PORT", "3000")
+
+import sys
+sys.path.append(workspace_root)
+from calendar_mcp.server import app as calendar_app
+from task_mcp.server import app as task_app
 
 # Create logs directory if it doesn't exist
 if not os.path.exists(logs_dir):
@@ -61,6 +69,16 @@ task_connected = False
 
 # FastAPI instantiation
 app = FastAPI()
+
+# Mount MCP sub-apps
+app.mount("/calendar", calendar_app)
+app.mount("/task", task_app)
+
+# Dynamically route server URLs to mounted endpoints (supports single-port cloud deployment)
+port = int(os.getenv("PORT", 3000))
+base_url = f"http://localhost:{port}"
+config['servers']['calendar']['url'] = f"{base_url}/calendar"
+config['servers']['task']['url'] = f"{base_url}/task"
 
 # Add CORS Middleware
 app.add_middleware(
@@ -116,11 +134,16 @@ async def update_mcp_status():
 # Startup Event
 @app.on_event("startup")
 async def startup_event():
-    # Attempt initial connections in background or synchronously on boot
-    try:
-        await update_mcp_status()
-    except Exception:
-        pass
+    # Attempt initial connections in background after uvicorn starts up and binds
+    import asyncio
+    async def delayed_status_update():
+        await asyncio.sleep(1.5)
+        try:
+            await update_mcp_status()
+        except Exception as e:
+            print(f"[Orchestrator Warning] Delayed status update failed: {e}")
+            
+    asyncio.create_task(delayed_status_update())
 
 # Helper: Convert MCP Tool schema to OpenAI Function format
 def mcp_tools_to_openai(tools_list):
@@ -245,6 +268,8 @@ If the user wants to perform related actions automatically in a single call (e.g
 Similarly:
 - "Move my meeting and update the task deadline" -> Call "update_event" with "auto_update_task: true".
 - "Delete the meeting and remove its preparation task" -> Call "delete_event" with "auto_delete_task: true".
+
+CRITICAL: If a task has already been automatically created, updated, or deleted as part of an automatic Calendar tool call (e.g., via auto_create_task=true, auto_update_task=true, or auto_delete_task=true), you must NOT call the Task tools (create_task, update_task, delete_task) again in a subsequent step. The task has already been processed.
 
 If the user requests BOTH explicitly in a way that requires separate custom parameters (e.g., specific custom titles or descriptions), call the tools sequentially.
 Otherwise, use the automatic flags to demonstrate the MCP-to-MCP link.
@@ -517,5 +542,6 @@ async def get_single_log(filename: str):
 app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="static")
 
 if __name__ == '__main__':
-    print("[Orchestrator] Launching FastAPI backend on port 3000...")
-    uvicorn.run("orchestrator:app", host="0.0.0.0", port=3000, log_level="info")
+    port = int(os.getenv("PORT", 3000))
+    print(f"[Orchestrator] Launching FastAPI backend on port {port}...")
+    uvicorn.run("orchestrator:app", host="0.0.0.0", port=port, log_level="info")

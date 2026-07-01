@@ -152,7 +152,29 @@ def get_google_service(service_name, version):
     If credentials.json or token.json are not present, transparently falls back to
     a Mock service to allow testing the dashboard without Google Account setup.
     """
-    config_dir = os.path.join(os.path.dirname(__file__), '..', 'config')
+    config_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'config'))
+    if not os.path.exists(config_dir):
+        os.makedirs(config_dir, exist_ok=True)
+        
+    # Dynamically write credentials and token from environment variables (Cloud Deployment Support)
+    credentials_env = os.getenv("GOOGLE_CREDENTIALS_JSON")
+    if credentials_env:
+        try:
+            json.loads(credentials_env) # Validate JSON format
+            with open(os.path.join(config_dir, 'credentials.json'), 'w', encoding='utf-8') as f:
+                f.write(credentials_env)
+        except Exception as e:
+            print(f"[Google Auth] Failed to write GOOGLE_CREDENTIALS_JSON from environment: {e}")
+
+    token_env = os.getenv("GOOGLE_TOKEN_JSON")
+    if token_env:
+        try:
+            json.loads(token_env) # Validate JSON format
+            with open(os.path.join(config_dir, 'token.json'), 'w', encoding='utf-8') as f:
+                f.write(token_env)
+        except Exception as e:
+            print(f"[Google Auth] Failed to write GOOGLE_TOKEN_JSON from environment: {e}")
+
     token_path = os.path.join(config_dir, 'token.json')
     
     # Fallback to Mock Services if credentials are not configured

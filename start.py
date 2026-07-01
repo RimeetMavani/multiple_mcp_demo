@@ -83,8 +83,8 @@ def main():
         print("-" * 60 + "\n")
 
     # Start MCP Servers
-    start_process("Task MCP", os.path.join(current_dir, 'task-mcp'), 3002, COLOR_TASK)
-    start_process("Calendar MCP", os.path.join(current_dir, 'calendar-mcp'), 3001, COLOR_CALENDAR)
+    start_process("Task MCP", os.path.join(current_dir, 'task_mcp'), 3002, COLOR_TASK)
+    start_process("Calendar MCP", os.path.join(current_dir, 'calendar_mcp'), 3001, COLOR_CALENDAR)
     
     print(f"\n[System] Waiting 2 seconds for MCP servers to initialize...")
     time.sleep(2)

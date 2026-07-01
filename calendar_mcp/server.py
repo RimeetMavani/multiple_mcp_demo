@@ -99,9 +99,11 @@ def format_date_display(date_str):
 
 # Helper: Call the Task MCP server tools using an internal client (Automatic MCP-to-MCP)
 async def call_task_mcp(tool_name: str, args: dict):
-    print(f"[Calendar MCP Client] Connect to Task MCP (3002) to run: {tool_name}...")
+    port = int(os.getenv("PORT", 3000))
+    task_url = os.getenv("TASK_MCP_URL", f"http://localhost:{port}/task" if os.getenv("PORT") else "http://localhost:3002")
+    print(f"[Calendar MCP Client] Connect to Task MCP at {task_url} to run: {tool_name}...")
     try:
-        async with sse_client("http://localhost:3002/sse") as (read_stream, write_stream):
+        async with sse_client(f"{task_url}/sse") as (read_stream, write_stream):
             async with ClientSession(read_stream, write_stream) as session:
                 await session.initialize()
                 print(f"[Calendar MCP Client] Call: {tool_name} with args: {args}")
