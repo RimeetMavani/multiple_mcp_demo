@@ -61,7 +61,7 @@ graph LR
     Host -->|3b. Call Task Tool| TaskServer
 
     %% Server to Server SSE connection (Calendar server acting as Client to Task server)
-    CalServer -.->|4. Server-to-Server Client Link<br/>(Calls: create_task, update_task, delete_task)| TaskServer
+    CalServer -.->|4. Server-to-Server Client Link - Calls create_task, update_task, delete_task| TaskServer
 
     subgraph Google ["Google Cloud APIs"]
         direction TB
